@@ -9,6 +9,11 @@ public class RigidBodyCharacterController : MonoBehaviour
 
     [SerializeField]
     private float maxSpeed = 3;
+    
+    [SerializeField]
+    [Tooltip("0 = no turning, 1 = instant snap turning.")]
+    [Range(0,1)]
+    private float turnSpeed = 0.3f;
 
     [SerializeField]
     private PhysicMaterial stoppingPhysicsMaterial, movingPhysicsMaterial;
@@ -26,21 +31,23 @@ public class RigidBodyCharacterController : MonoBehaviour
     private void FixedUpdate()
     {
         var inputDirection = new Vector3(input.x, 0, input.y);
-        
-        collider.material = inputDirection.magnitude > 0 ? collider.material = movingPhysicsMaterial : collider.material = stoppingPhysicsMaterial;
 
-        //if (inputDirection.magnitude > 0)
-        //{
-        //    collider.material = movingPhysicsMaterial;
-        //}
-        //else
-        //{
-        //    collider.material = stoppingPhysicsMaterial;
-        //}
+        Vector3 flattenedCameraForward = Camera.main.transform.forward;
+        flattenedCameraForward.y = 0;
+        var cameraRotation = Quaternion.LookRotation(flattenedCameraForward);
+
+        Vector3 cameraRelativeInputDirection = cameraRotation * inputDirection;
+        collider.material = inputDirection.magnitude > 0 ? collider.material = movingPhysicsMaterial : collider.material = stoppingPhysicsMaterial;
 
         if (rigidbody.velocity.magnitude < maxSpeed)
         {
-            rigidbody.AddForce(inputDirection * accelerationForce, ForceMode.Acceleration);
+            rigidbody.AddForce(cameraRelativeInputDirection * accelerationForce, ForceMode.Acceleration);
+        }
+
+        if (cameraRelativeInputDirection.magnitude > 0)
+        {
+            var targetRotation = Quaternion.LookRotation(cameraRelativeInputDirection);
+            transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, turnSpeed);
         }
     }
 
