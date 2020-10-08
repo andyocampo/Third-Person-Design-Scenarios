@@ -10,7 +10,7 @@ public class ContextualMessageTrigger : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if(other.CompareTag("PLayer"))
+        if(other.CompareTag("Player"))
         {
             if(ContextualMessageTriggered != null)
             {
